@@ -14,7 +14,7 @@ import signal
 
 # 限制精确到 3.7.3（最严格）
 if sys.version_info < (3, 9):
-    print(f"错误：需要 Python 3.9 及以上，你的版本: {sys.version}")
+    print(f"错误：需要 Python 3.9 及以上，当前版本: {sys.version}")
     sys.exit(1)
 
 #手动设置该值 不为0 开启
