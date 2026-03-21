@@ -40,22 +40,20 @@ def thd_readpipe(pipepath:str,thdlock:"threading.Lock",isexit:list,totalpipe:lis
         :param isexit: 指示当前线程是否继续运行,为True退出
         :param totalpipe: 从管道读取数据的累计,单位字节
     """
-
+    fp=os.open(pipepath, os.O_RDONLY | os.O_NONBLOCK)
     while True:
-      fp=os.open(pipepath, os.O_RDONLY | os.O_NONBLOCK)
-      while True:
         if isexit[0] == True:
-           debug_print("thd_readpipe: recv exit cmd.")
-           os.close(fp)
-           return  
-        #debug_print('thd_readpipe loop')
+            debug_print("thd_readpipe: recv exit cmd.")
+            os.close(fp)
+            return  
+            #debug_print('thd_readpipe loop')
         try:
-          data=os.read(fp,1440)
-          #debug_print(f"current: {len(data)}")  
+            data=os.read(fp,1440)
+            #debug_print(f"current: {len(data)}")  
         except BlockingIOError:
-          data=b''
-          time.sleep(0.1)
-          pass
+            data=b''
+            time.sleep(0.1)
+            pass
 
         if data != b'':    
             with thdlock:
@@ -63,7 +61,7 @@ def thd_readpipe(pipepath:str,thdlock:"threading.Lock",isexit:list,totalpipe:lis
                 #debug_print(f"total: {thdargs[1][0]}")
                 #在这里将副本流保存到文件或是其他操作 不要阻塞式操作 
         else:
-           time.sleep(1.0)
+            time.sleep(1.0)
             
 
 
@@ -88,6 +86,10 @@ def playsteam(url:str="",ffvol:int=30,retry:int=3,timeout:int=5,devaudio:str="",
     ffvol:float = ffvol / 100.0
    
     ishttp=url.startswith(('http://', 'https://','HTTP://','HTTPS://'))
+    ua_params = [
+        "-user_agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:70.1)"
+    ] if ishttp else []
+    
     if devaudio == "" or devaudio == "pulse":
        devaudio=[ "pulse", "-filter:a",f"volume={ffvol}","-name", "ffstreamplay", f"{audioname}"] 
     elif devaudio == "alsa":
@@ -103,6 +105,7 @@ def playsteam(url:str="",ffvol:int=30,retry:int=3,timeout:int=5,devaudio:str="",
         "ffmpeg",
         "-y",
         "-loglevel","quiet",
+        *ua_params,
         "-i",url,
 
         "-f",*devaudio,
@@ -203,6 +206,7 @@ def main():
   playsteam(url=args.input,devaudio=args.devaudio,audioname=args.sinkname,retry=args.retry,timeout=args.timeout,ffvol=args.ffvol)
 
 
+#KeyboardInterrupt  捕获   以删除  os.remove(PIPEPATH)
 
 
 if __name__ == "__main__":
